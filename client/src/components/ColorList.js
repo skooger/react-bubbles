@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import axiosWithAuth from '../utils/axiosWithAuth';
 import axios from 'axios'
+import { createParameter } from "typescript";
 
 const initialColor = {
   color: "",
@@ -12,10 +13,12 @@ const ColorList = ({ colors, updateColors }) => {
   const [editing, setEditing] = useState(false);
   const [colorToEdit, setColorToEdit] = useState(initialColor);
   const [colorToAdd, setColorToAdd] = useState(initialColor);
+  const [colorID, setColorId] = useState(initialColor);
 
   const editColor = color => {
     setEditing(true);
     setColorToEdit(color);
+    setColorId(color);
   };
 
   const saveEdit = e => {
@@ -26,10 +29,10 @@ const ColorList = ({ colors, updateColors }) => {
     axiosWithAuth()
             .put(`/api/colors/${colorToEdit.id}`, colorToEdit)
             .then(res => {
-                console.log(res);
+             for(let i = 0; i < colors.length; i++){if(colors[i].id === res.data.id){ colors[i] = res.data}}
+             updateColors(colors)
                
             }).catch(err => console.log(err));
-            updateColors(colors)
     }
 
   const deleteColor = color => {
@@ -38,13 +41,15 @@ const ColorList = ({ colors, updateColors }) => {
             .delete(`/api/colors/${color.id}`)
             .then(res => {
               console.log(res)
+              updateColors(colors.filter(value => value.id != res.data))
+
             }).catch(err => console.log(err));
   };
 
   const addColor = e => {
     e.preventDefault();
     axiosWithAuth()
-        .post('/api/colors', {id: Date.now(), ...colorToAdd})
+        .post('/api/colors', {...colorToAdd, id: Date.now()})
         .then(res => {
             updateColors(res.data)
         }).catch(err => console.log(err));
